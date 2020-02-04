@@ -29,8 +29,7 @@ class CSP:
           """
 
     def __init__(self, vars, domains, neighbors, constraints):
-        "Construct a CSP problem. If vars is empty, it becomes domains.keys()."
-        vars = vars or domains.keys()
+        "Construct a CSP problem."
         self.vars = vars
         self.domains = domains
         self.neighbors = neighbors
@@ -69,7 +68,7 @@ class CSP:
             for B in self.neighbors[var]:
                 if B not in assignment:
                     for b in self.curr_domains[B][:]:
-                        if not self.constraints(var, val, B, b):
+                        if not self.constraints(var, val, B, b, assignment):
                             self.curr_domains[B].remove(b)
                             self.pruned[var].append((B, b))
 
