@@ -68,7 +68,7 @@ class CSP:
             for B in self.neighbors[var]:
                 if B not in assignment:
                     for b in self.curr_domains[B][:]:
-                        if not self.constraints(var, val, B, b, assignment):
+                        if not self.constraints(var, val, B, b):
                             self.curr_domains[B].remove(b)
                             self.pruned[var].append((B, b))
 
