@@ -1,121 +1,152 @@
 class CSP:
     """This class describes finite-domain Constraint Satisfaction Problems.
-      A CSP is specified by the following three inputs:
-          vars        A list of variables; each is atomic (e.g. int or string).
-          domains     A dict of {var:[possible_value, ...]} entries.
-          neighbors   A dict of {var:[var,...]} that for each variable lists
-                      the other variables that participate in constraints.
-          constraints A function f(A, a, B, b) that returns true if neighbors
-                      A, B satisfy the constraint when they have values A=a, B=b
-      In the textbook and in most mathematical definitions, the
-      constraints are specified as explicit pairs of allowable values,
-      but the formulation here is easier to express and more compact for
-      most cases. (For example, the n-Queens problem can be represented
-      in O(n) space using this notation, instead of O(N^4) for the
-      explicit representation.) In terms of describing the CSP as a
-      problem, that's all there is.
+    A CSP is specified by the following inputs:
+        variables   A list of variables; each is atomic (e.g. int or string).
+        domains     A dict of {var:[possible_value, ...]} entries.
+        neighbors   A dict of {var:[var,...]} that for each variable lists
+                    the other variables that participate in constraints.
+        constraints A function f(A, a, B, b) that returns true if neighbors
+                    A, B satisfy the constraint when they have values A=a, B=b
+    In the textbook and in most mathematical definitions, the
+    constraints are specified as explicit pairs of allowable values,
+    but the formulation here is easier to express and more compact for
+    most cases (for example, the n-Queens problem can be represented
+    in O(n) space using this notation, instead of O(n^4) for the
+    explicit representation). In terms of describing the CSP as a
+    problem, that's all there is.
+    However, the class also supports data structures and methods that help you
+    solve CSPs by calling a search function on the CSP. Methods and slots are
+    as follows, where the argument 'a' represents an assignment, which is a
+    dict of {var:val} entries:
+        assign(var, val, a)     Assign a[var] = val; do other bookkeeping
+        unassign(var, a)        Do del a[var], plus other bookkeeping
+        curr_domains[var]       Slot: remaining consistent values for var
+                                Used by constraint propagation routines.
+    The following are just for debugging purposes:
+        display(a)              Print a human-readable representation
+    """
 
-      However, the class also supports data structures and methods that help you
-      solve CSPs by calling a search function on the CSP.  Methods and slots are
-      as follows, where the argument 'a' represents an assignment, which is a
-      dict of {var:val} entries:
-          assign(var, val, a)     Assign a[var] = val; do other bookkeeping
-          unassign(var, a)        Do del a[var], plus other bookkeeping
-          curr_domains[var]       Slot: remaining consistent values for var
-                                  Used by constraint propagation routines.
-      The following are just for debugging purposes:
-          nassigns                Slot: tracks the number of assignments made
-          display(a)              Print a human-readable representation
-          """
-
-    def __init__(self, vars, domains, neighbors, constraints):
+    def __init__(self, variables, domains, neighbors, constraints):
         "Construct a CSP problem."
-        self.vars = vars
+        variables = variables or list(domains.keys())
+        self.variables = variables
         self.domains = domains
         self.neighbors = neighbors
         self.constraints = constraints
-        self.initial = {}
         self.curr_domains = None
-        self.pruned = None
-        self.nassigns = 0
 
     def assign(self, var, val, assignment):
-        """Add {var: val} to assignment; Discard the old value if any.
-        Do bookkeeping for curr_domains and nassigns."""
-        self.nassigns += 1
+        """Add {var: val} to assignment; Discard the old value if any."""
         assignment[var] = val
-        if self.curr_domains:
-            self.forward_check(var, val, assignment)
 
     def unassign(self, var, assignment):
-        """Remove {var: val} from assignment; that is backtrack.
+        """Remove {var: val} from assignment.
         DO NOT call this if you are changing a variable to a new value;
         just call assign for that."""
         if var in assignment:
-            # Reset the curr_domain to be the full original domain
-            if self.curr_domains:
-                self.curr_domains[var] = self.domains[var][:]
             del assignment[var]
 
-    def forward_check(self, var, val, assignment):
-        "Do forward checking (current domain reduction) for this assignment."
-        if self.curr_domains:
-            # Restore prunings from previous value of var
-            for (B, b) in self.pruned[var]:
-                self.curr_domains[B].append(b)
-            self.pruned[var] = []
-            # Prune any other B=b assignement that conflict with var=val
-            for B in self.neighbors[var]:
-                if B not in assignment:
-                    for b in self.curr_domains[B][:]:
-                        if not self.constraints(var, val, B, b):
-                            self.curr_domains[B].remove(b)
-                            self.pruned[var].append((B, b))
+    def nconflicts(self, var, val, assignment):
+        """Return the number of conflicts var=val has with other variables."""
+
+        # Subclasses may implement this more efficiently
+        def conflict(var2):
+            return var2 in assignment and not self.constraints(var, val, var2, assignment[var2])
+
+        return sum(map(bool, (conflict(v) for v in self.neighbors[var])))
 
     def display(self, assignment):
-        "Show a human-readable representation of the CSP."
+        """Show a human-readable representation of the CSP."""
         # Subclasses can print in a prettier way, or display with a GUI
-        print('CSP:', self, 'with assignment:', assignment)
+        print(assignment)
+
+    def goal_test(self, state):
+        """The goal is to assign all variables, with all constraints satisfied."""
+        assignment = dict(state)
+        return (len(assignment) == len(self.variables)
+                and all(self.nconflicts(variables, assignment[variables], assignment) == 0
+                        for variables in self.variables))
+
+    def support_pruning(self):
+        """Make sure we can prune values from domains. (We want to pay
+        for this only if we use it.)"""
+        if self.curr_domains is None:
+            self.curr_domains = {
+                v: list(self.domains[v]) for v in self.variables}
+
+    def suppose(self, var, value):
+        """Start accumulating inferences from assuming var=value."""
+        self.support_pruning()
+        removals = [(var, a) for a in self.curr_domains[var] if a != value]
+        self.curr_domains[var] = [value]
+        return removals
+
+    def prune(self, var, value, removals):
+        """Rule out var=value."""
+        self.curr_domains[var].remove(value)
+        if removals is not None:
+            removals.append((var, value))
+
+    def choices(self, var):
+        """Return all values for var that aren't currently ruled out."""
+        return (self.curr_domains or self.domains)[var]
+
+    def infer_assignment(self):
+        """Return the partial assignment implied by the current inferences."""
+        self.support_pruning()
+        return {v: self.curr_domains[v][0]
+                for v in self.variables if 1 == len(self.curr_domains[v])}
+
+    def restore(self, removals):
+        """Undo a supposition and all inferences from it."""
+        for B, b in removals:
+            self.curr_domains[B].append(b)
 
 # CSP Backtracking Search
 
 
+def forward_checking(csp, var, value, assignment, removals):
+    """Prune neighbor values inconsistent with var=value."""
+    csp.support_pruning()
+    for B in csp.neighbors[var]:
+        if B not in assignment:
+            for b in csp.curr_domains[B][:]:
+                if not csp.constraints(var, value, B, b):
+                    csp.prune(B, b, removals)
+            if not csp.curr_domains[B]:
+                return False
+    return True
+
+
 def backtracking_search(csp):
-    "Set up to do recursive backtracking search"
-    csp.curr_domains, csp.pruned = {}, {}
-    for v in csp.vars:
-        csp.curr_domains[v] = csp.domains[v][:]
-        csp.pruned[v] = []
-    return recursive_backtracking({}, csp)
+    """[Figure 6.5]"""
 
+    def backtrack(assignment):
+        if len(assignment) == len(csp.variables):
+            return assignment
+        var = select_unassigned_variable(assignment, csp)
+        for value in order_domain_values(var, assignment, csp):
+            if 0 == csp.nconflicts(var, value, assignment):
+                csp.assign(var, value, assignment)
+                removals = csp.suppose(var, value)
+                if forward_checking(csp, var, value, assignment, removals):
+                    result = backtrack(assignment)
+                    if result is not None:
+                        return result
+                csp.restore(removals)
+        csp.unassign(var, assignment)
+        return None
 
-def recursive_backtracking(assignment, csp):
-    """Search for a consistent assignment for the csp.
-    Each recursive call chooses a variable, and considers values for it."""
-    if len(assignment) == len(csp.vars):
-        return assignment
-    var = select_unassigned_variable(assignment, csp)
-    for val in order_domain_values(var, assignment, csp):
-        csp.assign(var, val, assignment)
-        result = recursive_backtracking(assignment, csp)
-        if result is not None:
-            return result
-    csp.unassign(var, assignment)
-    return None
+    result = backtrack({})
+    assert result is None or csp.goal_test(result)
+    return result
 
 
 def select_unassigned_variable(assignment, csp):
-    "Select the variable to work on next"
-    for v in csp.vars:
-        if v not in assignment:
-            return v
+    """The default variable order."""
+    return next(iter([var for var in csp.variables if var not in assignment]))
 
 
 def order_domain_values(var, assignment, csp):
-    "Decide what order to consider the domain variables."
-    if csp.curr_domains:
-        domain = csp.curr_domains[var]
-    else:
-        domain = csp.domains[var][:]
-    while domain:
-        yield domain.pop()
+    """The default value order."""
+    return csp.choices(var)
