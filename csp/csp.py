@@ -61,8 +61,7 @@ class CSP:
     def prune(self, var, value, removals):
         """Rule out var=value."""
         self.curr_domains[var].remove(value)
-        if removals is not None:
-            removals.append((var, value))
+        removals.append((var, value))
 
     def choices(self, var):
         """Return all values for var that aren't currently ruled out."""
@@ -97,7 +96,7 @@ def forward_checking(csp, var, value, assignment, removals):
             for b in csp.curr_domains[B][:]:
                 if not csp.constraints(var, value, B, b):
                     csp.prune(B, b, removals)
-            if not csp.curr_domains[B]:
+            if not csp.curr_domains[B]:  # check if curr_domains[B] is empty
                 return False
     return True
 
@@ -108,8 +107,8 @@ def backtracking_search(csp):
     def backtrack(assignment):
         if len(assignment) == len(csp.variables):
             return assignment
-        var = select_unassigned_variable(assignment, csp)
-        for value in order_domain_values(var, assignment, csp):
+        var = first_unassigned_variable(assignment, csp)
+        for value in csp.choices(var):
             csp.assign(var, value, assignment)
             removals = csp.suppose(var, value)
             if forward_checking(csp, var, value, assignment, removals):
@@ -123,11 +122,6 @@ def backtracking_search(csp):
     return backtrack({})
 
 
-def select_unassigned_variable(assignment, csp):
+def first_unassigned_variable(assignment, csp):
     """The default variable order."""
-    return next(iter([var for var in csp.variables if var not in assignment]))
-
-
-def order_domain_values(var, assignment, csp):
-    """The default value order."""
-    return csp.choices(var)
+    return [var for var in csp.variables if var not in assignment][0]
