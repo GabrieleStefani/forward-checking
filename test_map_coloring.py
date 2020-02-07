@@ -23,4 +23,4 @@ france_csp = MapColoring(list('RGBY'),
                             PI; PA: LR RA; PC: PL CE LI AQ; PI: NH NO CA IF; PL: BR NB CE PC; RA:
                             AU BO FC PA LR""")
 
-print(backtracking_search(usa_csp))
+print(backtracking_search(australia_csp))
