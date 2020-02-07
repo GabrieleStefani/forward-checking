@@ -82,46 +82,45 @@ class UniversalDict:
 
     def __getitem__(self, key): return self.value
 
-    def __repr__(self): return '{{Any: {0!r}}}'.format(self.value)
-
-
 # CSP Backtracking Search
 
 
 def forward_checking(csp, var, value, assignment, removals):
     """Prune neighbor values inconsistent with var=value."""
-    csp.support_pruning()
-    for B in csp.neighbors[var]:
-        if B not in assignment:
-            for b in csp.curr_domains[B][:]:
+    csp.support_pruning()  # clone domains in curr_domains
+    for B in csp.neighbors[var]:  # get var neighbors
+        if B not in assignment:  # check if neighbor is already assigned
+            for b in csp.curr_domains[B][:]:  # get neighbor domain
+                # VVV check constraint between var=value and B=b (B is the neighbor) VVV
                 if not csp.constraints(var, value, B, b):
-                    csp.prune(B, b, removals)
+                    csp.prune(B, b, removals)  # remove value b from B domain
             if not csp.curr_domains[B]:  # check if curr_domains[B] is empty
-                return False
-    return True
+                return False  # neighbor B has empty domain after pruning => var != val
+    return True  # every neighbor of var has at least one element in the pruned domain
 
 
 def backtracking_search(csp):
     """[Figure 6.5]"""
 
     def backtrack(assignment):
+        """This is a step of the backtracking_search"""
+        # assinged all the variables => found a solution
         if len(assignment) == len(csp.variables):
             return assignment
-        var = first_unassigned_variable(assignment, csp)
-        for value in csp.choices(var):
-            csp.assign(var, value, assignment)
+        # VVV get first not assigned variable VVV
+        var = next(var for var in csp.variables if var not in assignment)
+        for value in csp.choices(var):  # return the current domain of var
+            csp.assign(var, value, assignment)  # assign the value found to var
+            # VVV reducing var domain to contain only value VVV
             removals = csp.suppose(var, value)
+            # VVV checking respect of neighbors' contraints and reducing their domain VVV
             if forward_checking(csp, var, value, assignment, removals):
-                result = backtrack(assignment)
-                if result is not None:
+                result = backtrack(assignment)  # next step of backtrack
+                if result is not None:  # check if backtrack has failed
                     return result
-            csp.restore(removals)
+            csp.restore(removals)  # restore the reduced domains
+        # VVV unassing var (we have assigned the wrong value) VVV
         csp.unassign(var, assignment)
-        return None
+        return None  # return None to tell the caller backtrack has failed
 
-    return backtrack({})
-
-
-def first_unassigned_variable(assignment, csp):
-    """The default variable order."""
-    return [var for var in csp.variables if var not in assignment][0]
+    return backtrack({})  # start backtrack with no assigned variables

@@ -2,22 +2,6 @@ from csp import CSP, UniversalDict
 from collections import defaultdict
 
 
-def parse_neighbors(neighbors):
-    """Convert a string of the form 'X: Y Z; Y: Z' into a dict mapping
-    regions to neighbors. The syntax is a region name followed by a ':'
-    followed by zero or more region names, followed by ';', repeated for
-    each region name. If you say 'X: Y' you don't need 'Y: X'.
-    """
-    dic = defaultdict(list)
-    specs = [spec.split(':') for spec in neighbors.split(';')]
-    for (A, Aneighbors) in specs:
-        A = A.strip()
-        for B in Aneighbors.split():
-            dic[A].append(B)
-            dic[B].append(A)
-    return dic
-
-
 class MapColoring(CSP):
 
     def __init__(self, colors, neighbors):
@@ -25,6 +9,22 @@ class MapColoring(CSP):
         for any two adjacent regions. Arguments are a list of colors, and a
         dict of {region: [neighbor,...]} entries. This dict may also be
         specified as a string of the form defined by parse_neighbors."""
+
+        def parse_neighbors(neighbors):
+            """Convert a string of the form 'X: Y Z; Y: Z' into a dict mapping
+            regions to neighbors. The syntax is a region name followed by a ':'
+            followed by zero or more region names, followed by ';', repeated for
+            each region name. If you say 'X: Y' you don't need 'Y: X'.
+            """
+            dic = defaultdict(list)
+            specs = [spec.split(':') for spec in neighbors.split(';')]
+            for (A, Aneighbors) in specs:
+                A = A.strip()
+                for B in Aneighbors.split():
+                    dic[A].append(B)
+                    dic[B].append(A)
+            return dic
+
         if isinstance(neighbors, str):
             neighbors = parse_neighbors(neighbors)
 
