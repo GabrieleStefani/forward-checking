@@ -1,6 +1,7 @@
 from csp import CSP
 import itertools
 import re
+from functools import reduce
 
 
 def flatten(seqs):
@@ -56,9 +57,13 @@ class Sudoku(CSP):
 
         def show_cell(cell): return str(assignment.get(cell, '.'))
 
-        def abut(lines1, lines2): return list(
-            map(' | '.join, list(zip(lines1, lines2))))
-
+        def abut(lines1, lines2):
+            print("l" + str(lines1))
+            return list(map(' | '.join, list(zip(lines1, lines2))))
+        for brow in _BGRID:
+            print(reduce(
+                abut, map(show_box, brow)), end='')
+        print()
         print('\n------+-------+------\n'.join(
             '\n'.join(reduce(
                 abut, map(show_box, brow))) for brow in _BGRID))
