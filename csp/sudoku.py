@@ -19,9 +19,7 @@ _COLS = [(0, 3, 6, 27, 30, 33, 54, 57, 60), (1, 4, 7, 28, 31, 34, 55, 58, 61), (
                                                                                                                                                         67, 70), (11, 14, 17, 38, 41, 44, 65, 68, 71), (18, 21, 24, 45, 48, 51, 72, 75, 78), (19, 22, 25, 46, 49, 52, 73, 76, 79), (20, 23, 26, 47, 50, 53, 74, 77, 80)]  # list(zip(*_ROWS))
 
 _NEIGHBORS = {v: set() for v in flatten(_ROWS)}
-print(_NEIGHBORS)
 for unit in map(set, _BOXES + _ROWS + _COLS):
-    print(unit)
     for v in unit:
         _NEIGHBORS[v].update(unit - {v})
 

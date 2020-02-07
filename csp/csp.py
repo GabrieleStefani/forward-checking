@@ -22,8 +22,6 @@ class CSP:
         unassign(var, a)        Do del a[var], plus other bookkeeping
         curr_domains[var]       Slot: remaining consistent values for var
                                 Used by constraint propagation routines.
-    The following are just for debugging purposes:
-        display(a)              Print a human-readable representation
     """
 
     def __init__(self, variables, domains, neighbors, constraints):
@@ -45,27 +43,6 @@ class CSP:
         just call assign for that."""
         if var in assignment:
             del assignment[var]
-
-    def nconflicts(self, var, val, assignment):
-        """Return the number of conflicts var=val has with other variables."""
-
-        # Subclasses may implement this more efficiently
-        def conflict(var2):
-            return var2 in assignment and not self.constraints(var, val, var2, assignment[var2])
-
-        return sum(map(bool, (conflict(v) for v in self.neighbors[var])))
-
-    def display(self, assignment):
-        """Show a human-readable representation of the CSP."""
-        # Subclasses can print in a prettier way, or display with a GUI
-        print(assignment)
-
-    def goal_test(self, state):
-        """The goal is to assign all variables, with all constraints satisfied."""
-        assignment = dict(state)
-        return (len(assignment) == len(self.variables)
-                and all(self.nconflicts(variables, assignment[variables], assignment) == 0
-                        for variables in self.variables))
 
     def support_pruning(self):
         """Make sure we can prune values from domains. (We want to pay
@@ -91,12 +68,6 @@ class CSP:
         """Return all values for var that aren't currently ruled out."""
         return (self.curr_domains or self.domains)[var]
 
-    def infer_assignment(self):
-        """Return the partial assignment implied by the current inferences."""
-        self.support_pruning()
-        return {v: self.curr_domains[v][0]
-                for v in self.variables if 1 == len(self.curr_domains[v])}
-
     def restore(self, removals):
         """Undo a supposition and all inferences from it."""
         for B, b in removals:
@@ -106,9 +77,6 @@ class CSP:
 class UniversalDict:
     """A universal dict maps any key to the same value. We use it here
     as the domains dict for CSPs in which all variables have the same domain.
-    >>> d = UniversalDict(42)
-    >>> d['life']
-    42
     """
 
     def __init__(self, value): self.value = value
@@ -142,20 +110,17 @@ def backtracking_search(csp):
             return assignment
         var = select_unassigned_variable(assignment, csp)
         for value in order_domain_values(var, assignment, csp):
-            if 0 == csp.nconflicts(var, value, assignment):
-                csp.assign(var, value, assignment)
-                removals = csp.suppose(var, value)
-                if forward_checking(csp, var, value, assignment, removals):
-                    result = backtrack(assignment)
-                    if result is not None:
-                        return result
-                csp.restore(removals)
+            csp.assign(var, value, assignment)
+            removals = csp.suppose(var, value)
+            if forward_checking(csp, var, value, assignment, removals):
+                result = backtrack(assignment)
+                if result is not None:
+                    return result
+            csp.restore(removals)
         csp.unassign(var, assignment)
         return None
 
-    result = backtrack({})
-    assert result is None or csp.goal_test(result)
-    return result
+    return backtrack({})
 
 
 def select_unassigned_variable(assignment, csp):
