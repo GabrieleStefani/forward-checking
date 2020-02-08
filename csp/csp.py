@@ -72,6 +72,10 @@ class CSP:
         for B, b in removals:
             self.curr_domains[B].append(b)
 
+    def display(assignment):
+        """Print assignment."""
+        print(assignment)
+
 
 class UniversalDict:
     """A universal dict maps any key to the same value. We use it here

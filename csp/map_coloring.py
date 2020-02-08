@@ -33,3 +33,6 @@ class MapColoring(CSP):
             return a != b
         CSP.__init__(self, list(neighbors.keys()), UniversalDict(
             colors), neighbors, different_values_constraint)
+
+    def display(assignment):
+        [print(value, key) for key, value in assignment.items()]
