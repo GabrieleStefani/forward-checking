@@ -1,1 +1,8 @@
 csp/__pycache__/
+report/*.aux
+report/*.fdb_latexmk
+report/*.fls
+report/*.log
+report/*.out
+report/*.synctex.gz
+report/__latexindent_temp.tex

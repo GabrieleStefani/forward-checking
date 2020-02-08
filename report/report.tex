@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+\usepackage{hyperref}
 \begin{document}
 \title{Relazione per l’esame di\\Intelligenza Artificiale}
 \author{Gabriele Stefani 6342913}
@@ -6,29 +7,41 @@
 \maketitle
 
 \section{Introduzione}
-In questo elaborato si è  implementato l’algoritmo Froward Checking per risolvere Constraint Satisfaction Problem (CSP) binari applicato come inferenza nell’algoritmo Backtracking Search.
+In questo elaborato è stato implementato l’algoritmo \texttt{Forward Checking} per risolvere \texttt{Constraint Satisfaction Problem} (CSP) binari applicato come inferenza nell’algoritmo \texttt{Backtracking Search}. 
 I 3 problemi presi in considerazione sono: 
 \begin{itemize}
   \item Map Coloring
   \item Sudoku
   \item NQueens
 \end{itemize}
-Per ognuno di essi è stato codificato il modo in cui si ottengono le variabili, i domini di ciascuna variabile,  le variabili unite da un vincolo (obbligatoriamente binario) e i vincoli.
-
-\section{CSP generico}
-La base del codice definisce una classe CSP che descrive un problema di CSP generico in base a 4 strutture dati in ingresso. La prima è la lista delle variabili del problema, la seconda e la terza sono entrambi dizionari con chiave ogni variabile del problema, e valori rispettivamente il dominio della variabile (come lista) e la lista delle variabili che hanno un vincolo con essa (che da ora in poi chiameremo “vicini”), la quarta è una funzione che restituisce vero se il vincolo tra due generiche variabili alle quali è stato assegnato un valore è rispettato e falso altrimenti.
-Internamente esiste un’altra struttura che contiene i domini di ogni variabile ridotti dall’inferenza del Forward Checking.
+Per ognuno di essi sono stati codificati: le variabili, i domini di ciascuna di esse, le variabili unite da un vincolo (obbligatoriamente binario) e i vincoli.
 
 \section{Algoritmi}
-L’algoritmo di Backtracking Search riceve in ingresso un’istanza della suddetta classe CSP e restituisce un dizionario con chiave ogni variabile e valore il valore associato come soluzione del problema. Internamente sceglie come prossima variabile a cui assegnare un valore la prima della lista delle variabili che non sia stata ancora assegnata e l’ordine con cui vengono assegnati i valori del dominio è proprio l’ordine con cui sono inseriti i valori nel dominio.
-L’algoritmo use Forward Checking come inferenza ad ogni assegnazione di un valore ad una variabile riducendo così i domini delle variabili vicine in modo da rispettare i vincoli tra esse.
+L’algoritmo \texttt{Forward Checking} è usato come inferenza, ad ogni assegnazione di un valore ad una variabile riduce i domini delle variabili vicine, in modo da rispettare i vincoli tra esse. In questo modo il numero di conflitti tra variabili adiacenti è sempre 0.
+Per la ricerca della soluzione invece viene implementato l'algoritmo di \texttt{Backtracking Search} che riceve in ingresso un CSP e restituisce un dizionario in cui a ogni variabile è associato un valore che è soluzione del problema (ovvero soddifsa tutti i vincoli). 
+Ad ogni passo viene scelta come variabile a cui assegnare un valore la prima della lista delle variabili non ancora assegnate (la scelta dipende dunque dal modo in cui la lista è creata). Anche l’ordine con cui vengono assegnati i valori del dominio è quello della lista in cui è salvato, e dipende quindi dall'ordine di inserimento all'interno di essa.
+
+\section{CSP generico}
+La base del codice, oltre a fornire gli algoritmi sopra citati, definisce anche una classe che descrive un CSP binario generico (chiamata CSP) in base a 4 strutture dati:
+\begin{itemize}
+  \item Variabili: lista delle variabili del problema.
+  \item Domini: dizionario che associa ad ogni variabile la lista di valori del dominio
+  \item Vicini: dizionario che associa ad ogni variabile la lista di variabili che hanno un vincolo con essa
+  \item Vincolo: funzione che restituisce vero se il vincolo tra due generiche variabili alle quali è stato assegnato un valore è rispettato e falso altrimenti.
+\end{itemize}
+Internamente esiste un altro dizionario che associa ad ogni variabile il dominio che viene ridotto ad ogni passo della \texttt{Backtracking Search} dall’inferenza del \texttt{Forward Checking}.
+
 \section{Problemi}
 \subsection{Map Coloring}
-Il map coloring è stato codificato come problema di CSP binario utilizzando come variabili la lista degli stati da colorare, come dominio di ogni variabile la lista dei colori utilizzabili, come vicini gli stati confinanti tra loro e come vincolo la diversità tra i 2 valori assegnati a 2 variabili vicine.
+Il \textit{Map Coloring} è stato codificato come problema di CSP binario utilizzando come variabili la lista degli stati da colorare, come dominio di ogni variabile la lista dei colori utilizzabili, come vicini gli stati confinanti tra loro e come vincolo la diversità tra i 2 valori assegnati a 2 variabili vicine.
 \subsection{Sudoku}
-Nel sudoku le variabili sono le celle, i domini di ogni variabile sono i valori da 1 a 9 tranne nei casi in cui a una cella sia già stato assegnato un valore, in tal caso il dominio è il valore stesso. Il vincolo è ancora una volta il vincolo di diversità per cui i vicini di ogni variabile (o cella) sono tutte le celle nello stesso quadrante, nella stessa riga e nella stessa colonna. 
+Nel \textit{Sudoku} le variabili sono le celle, i domini di ogni variabile sono i valori da 1 a 9 tranne nei casi in cui a una cella sia già stato assegnato un valore, in tal caso il dominio è il valore stesso. Il vincolo è ancora una volta il vincolo di diversità per cui i vicini di ogni variabile (o cella) sono tutte le celle nello stesso quadrante, nella stessa riga e nella stessa colonna. 
 \subsection{NQueens}
-Il problema delle n regine è stato codificato pensando che ogni regina deve essere disposta su una colonna diversa, altrimenti le regine si mangerebbero sicuramente tra loro, quindi ogni variabile corrisponde ad una colonna e il dominio sono le righe. Se usiamo delle coordinate (x, y) per indicare una posizione sulla scacchiera le variabili corrispondono alle y e i valori del dominio alle x. Il vincolo sfrutta proprio queste coordinate per capire se 23 regine si trovino sulla stessa diagonale o sulla stessa riga per cui ogni variabile ha come vicini tutte le altre variabili in modo che nessuna regina sia sulla stessa riga o sulla stessa diagonale.
+\textit{NQueens} è stato codificato pensando che ogni regina deve essere disposta su una colonna diversa, altrimenti le regine si mangerebbero sicuramente tra loro. Ogni variabile corrisponde quindi ad una colonna e il dominio sono le righe. Usando delle coordinate (x, y) per indicare una posizione sulla scacchiera, le variabili corrispondono alle y e i valori del dominio alle x. Il vincolo sfrutta proprio queste coordinate per capire se due regine si trovino sulla stessa diagonale o sulla stessa riga. Per cui ogni variabile ha come vicini tutte le altre variabili in modo che nessuna regina si trovi sulla stessa riga o sulla stessa diagonale.
 \section{Prestazioni}
-La risoluzione di questi problemi attraverso l’algoritmo Forward Checking non è molto efficiente, quindi la risoluzione di problemi difficili (NQueens con n grandi o sudoku con pochi valori iniziali) può portare a tempi di attesa notevoli.
+La risoluzione di \textit{Sudoku} e \textit{NQueens} attraverso l’algoritmo \texttt{Forward Checking} non è la più efficiente. 
+La risoluzione di \textit{NQueens} con n molto grandi può essere molto lunga così come risolvere alcuni sudoku può portare a tempi di attesa notevoli.
+\section{Riferimenti}
+La maggioranza delle informazioni sono state recuperate da \textit{Stuart Russell and Peter Norvig. Artificial Intelligence: A Modern Ap-
+proach. 3rd edition. Pearson, 2010}.\\Per la codifica di \textit{NQueens} si rimanda \href{http://www.csplib.org/Problems/prob054/}{questo problema di CSPLib}.\\Il codice e la codifica dei restanti problemi sono stati presi dal repository \href{https://github.com/aimacode/aima-python}{aima-python}.\\La scelta di CSP binari deriva invece dalla lettura di \href{https://arxiv.org/pdf/1109.5714.pdf}{questo articolo}.
 \end{document}

@@ -8,12 +8,12 @@ def flatten(seqs):
     return sum(seqs, [])
 
 
-# list(range(3))
+# _R3 = list(range(3))
 # _CELL = itertools.count().__next__
-# [[[[_CELL() for x in _R3] for y in _R3] for bx in _R3] for by in _R3]
-# flatten([list(map(flatten, brow)) for brow in _BGRID])
-# flatten([list(map(flatten, zip(*brow))) for brow in _BGRID])
-# list(zip(*_ROWS))
+# _BGRID = [[[[_CELL() for x in _R3] for y in _R3] for bx in _R3] for by in _R3]
+# _BOXES = flatten([list(map(flatten, brow)) for brow in _BGRID])
+# _ROWS = flatten([list(map(flatten, zip(*brow))) for brow in _BGRID])
+# _COLS = list(zip(*_ROWS))
 _BGRID = [[[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[9, 10, 11], [12, 13, 14], [15, 16, 17]], [[18, 19, 20], [21, 22, 23], [24, 25, 26]]], [[[27, 28, 29], [30, 31, 32], [33, 34, 35]], [[36, 37, 38], [39, 40, 41], [42, 43, 44]], [[45, 46, 47], [
     48, 49, 50], [51, 52, 53]]], [[[54, 55, 56], [57, 58, 59], [60, 61, 62]], [[63, 64, 65], [66, 67, 68], [69, 70, 71]], [[72, 73, 74], [75, 76, 77], [78, 79, 80]]]]
 _BOXES = [[0, 1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16, 17], [18, 19, 20, 21, 22, 23, 24, 25, 26], [27, 28, 29, 30, 31, 32, 33, 34, 35], [36, 37, 38, 39, 40, 41, 42, 43, 44], [
