@@ -65,6 +65,6 @@ class Sudoku(CSP):
                             print(assignment[cell], end=' ')
                         print('|', end=' ')
                     print()
-                print("------+-------+--------")
+                print("------+-------+-------+")
         else:
             print("Failed!")
