@@ -14,14 +14,6 @@ class CSP:
     in O(n) space using this notation, instead of O(n^4) for the
     explicit representation). In terms of describing the CSP as a
     problem, that's all there is.
-    However, the class also supports data structures and methods that help you
-    solve CSPs by calling a search function on the CSP. Methods and slots are
-    as follows, where the argument 'a' represents an assignment, which is a
-    dict of {var:val} entries:
-        assign(var, val, a)     Assign a[var] = val; do other bookkeeping
-        unassign(var, a)        Do del a[var], plus other bookkeeping
-        curr_domains[var]       Slot: remaining consistent values for var
-                                Used by constraint propagation routines.
     """
 
     def __init__(self, variables, domains, neighbors, constraints):
@@ -72,6 +64,7 @@ class CSP:
         for B, b in removals:
             self.curr_domains[B].append(b)
 
+    @staticmethod
     def display(assignment):
         """Print assignment."""
         print(assignment)
